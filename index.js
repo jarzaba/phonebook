@@ -66,12 +66,13 @@ app.get('/api/persons', (request, response) => {
   });
 });
 
-app.get('/api/persons/info', (req, res) => {
-  res.send(
-    `<div>Phonebook has info for ${persons.length} people</div>
-        <div>${new Date()}</div>
-        `
-  );
+app.get('/api/info', (req, res) => {
+  Record.find({}).then((persons) => {
+    res.send(
+      `<div>Phonebook has info for ${persons.length} people</div>
+       <div>${new Date()}</div>`
+    );
+  });
 });
 
 app.get('/api/persons/:id', (request, response, next) => {
@@ -103,12 +104,9 @@ app.delete('/api/persons/:id', (request, response, next) => {
       response.status(204).end();
     })
     .catch((error) => next(error));
-  //const id = Number(request.params.id);
-  //persons = persons.filter((person) => person.id !== id);
-  //response.status(204).end();
 });
 
-// Ei tarvita enää Mongon kanssa, joka generoi automaattisesti id:n
+// generateId ei tarvita enää Mongon kanssa, koska generoi automaattisesti id:n
 /*
 const generateId = () => {
   const randomNumber = Math.floor(Math.random() * 10000);
@@ -149,32 +147,21 @@ app.post('/api/persons', (request, response) => {
   if (!body.name || !body.number) {
     return response.status(400).json({ error: 'name or number missing' });
   }
-  /*
-  if (persons.find((person) => person.name === body.name)) {
-    return response.status(400).json({ error: 'name must be unique' });
-  }
-*/
+
+  //if (persons.find((person) => person.name === body.name)) {
+  //  return response.status(400).json({ error: 'name must be unique' });}
+
   const person = new Record({
     name: body.name,
     number: body.number,
     // id: generateId(),
   });
   console.log(person);
-  //person.save((err, doc) => {
-  //  err ? console.error(err) : console.log('Document inserted');
-  //});
-
   person.save().then((newPerson) => {
     response.json(newPerson);
     console.log(newPerson);
     console.log('Name and number inserted into phonebook');
-
-    //mongoose.connection.close();
   });
-
-  //persons = persons.concat(person);
-  //console.log(person);
-  //response.json(person);
 });
 
 const unknownEndpoint = (request, response) => {
@@ -186,11 +173,9 @@ app.use(unknownEndpoint);
 
 const errorHandler = (error, request, response, next) => {
   console.error(error.message);
-
   if (error.name === 'CastError') {
     return response.status(400).send({ error: 'malformatted id' });
   }
-
   next(error);
 };
 
