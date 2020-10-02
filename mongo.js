@@ -1,16 +1,14 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
 
-const url = process.env.MONGODB_URI;
+//const url = process.env.MONGODB_URI;
 
-/*
 if (process.argv.length < 3) {
   console.log('give password as argument');
   process.exit(1);
 }
 const password = process.argv[2];
 const url = `mongodb+srv://jarkko:${password}@klusteri.b8frz.mongodb.net/puhelinluettelo?retryWrites=true&w=majority`;
-*/
 
 mongoose.connect(url, {
   useNewUrlParser: true,
@@ -22,7 +20,6 @@ mongoose.connect(url, {
 const personSchema = new mongoose.Schema({
   name: String,
   number: String,
-  date: Date,
 });
 
 personSchema.set('toJSON', {
@@ -39,7 +36,6 @@ if (process.argv.length === 5) {
   const record = new Record({
     name: process.argv[3],
     number: process.argv[4],
-    date: new Date(),
   });
 
   record.save().then((response) => {

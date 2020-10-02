@@ -55,24 +55,28 @@ app.get('/', (req, res) => {
   res.send('<h1>Hello World!</h1>');
 });
 
-app.get('/api/persons', (request, response) => {
+app.get('/api/persons', (request, response, next) => {
   // res.json(persons);
-  Record.find({}).then((persons) => {
-    response.json(persons);
+  Record.find({})
+    .then((persons) => {
+      response.json(persons);
 
-    //result.forEach((note) => {
-    //  console.log(`${note.name} ${note.number}`);
-    //mongoose.connection.close();
-  });
+      //result.forEach((note) => {
+      //  console.log(`${note.name} ${note.number}`);
+      //mongoose.connection.close();
+    })
+    .catch((error) => next(error));
 });
 
-app.get('/api/info', (req, res) => {
-  Record.find({}).then((persons) => {
-    res.send(
-      `<div>Phonebook has info for ${persons.length} people</div>
+app.get('/api/info', (req, res, next) => {
+  Record.find({})
+    .then((persons) => {
+      res.send(
+        `<div>Phonebook has info for ${persons.length} people</div>
        <div>${new Date()}</div>`
-    );
-  });
+      );
+    })
+    .catch((error) => next(error));
 });
 
 app.get('/api/persons/:id', (request, response, next) => {
@@ -140,13 +144,13 @@ app.put('/api/persons/:id', (request, response, next) => {
     .catch((error) => next(error));
 });
 
-app.post('/api/persons', (request, response) => {
+app.post('/api/persons', (request, response, next) => {
   const body = request.body;
   console.log('laittamassa uutta nimeä tietokantaan...');
 
-  if (!body.name || !body.number) {
-    return response.status(400).json({ error: 'name or number missing' });
-  }
+  //if (!body.name || !body.number) {
+  //  return response.status(400).json({ error: 'name or number missing' });
+  //}
 
   //if (persons.find((person) => person.name === body.name)) {
   //  return response.status(400).json({ error: 'name must be unique' });}
@@ -157,11 +161,13 @@ app.post('/api/persons', (request, response) => {
     // id: generateId(),
   });
   console.log(person);
-  person.save().then((newPerson) => {
-    response.json(newPerson);
-    console.log(newPerson);
-    console.log('Name and number inserted into phonebook');
-  });
+  person
+    .save()
+    .then((newPerson) => newPerson.toJSON())
+    .then((formattedNewPerson) => {
+      response.json(formattedNewPerson);
+    })
+    .catch((error) => next(error));
 });
 
 const unknownEndpoint = (request, response) => {
@@ -175,6 +181,8 @@ const errorHandler = (error, request, response, next) => {
   console.error(error.message);
   if (error.name === 'CastError') {
     return response.status(400).send({ error: 'malformatted id' });
+  } else if (error.name === 'ValidationError') {
+    return response.status(400).json({ error: error.message });
   }
   next(error);
 };
